@@ -76,6 +76,12 @@
         </style>
 
         <script>
+            $(document).ready(function () {
+                $("#orders-box").html("");
+                showExchange();
+                showOrders();
+            });
+
             function order() {
                 let name = $('#order-name').val();
                 let count = $('#order-count').val();
@@ -84,18 +90,67 @@
 
                 if (name == '') {
                     alert('이름을 입력하세요!');
-
+                    $("#order-name").focus();
+                    return;
                 } else if (count == '') {
                     alert('사이즈를 입력하세요!');
+                    $("#order-count").focus();
+                    return;
                 } else if (address == '') {
                     alert('주소를 입력하세요!');
+                    $("#order-address").focus();
+                    return;
                 } else if (phone == '') {
                     alert('전화번호를 입력하세요!');
-                } else if (phoneNumber(phone)) {
+                    $("#order-phone").focus();
+                    return;
+                } else if (!phoneNumber(phone)) {
                     alert('유효하지 않은 전화번호입니다. \n 010-0000-0000으로 입력해주세요');
-                } else {
-                    alert('주문이 완료되었습니다.');
+                    return;
                 }
+                $.ajax({
+                    type: "POST",
+                    url: "/order",
+                    data: {name_give: name, count_give: count, address_give: address, phone_give: phone},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            alert(response["msg"]);
+                            window.location.reload();
+                        }
+                    }
+                })
+
+            }
+
+            function phoneNumber(p) {
+                if (/^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}/.test(p)) {
+                    return true;
+                }
+                return false;
+            }
+
+            function showOrders() {
+                $.ajax({
+                    type: "GET",
+                    url: "/order",
+                    data: {},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            let orders = response["orders"];
+                            // 3. 요청 성공했을 때 리뷰를 올바르게 화면에 나타내기
+                            for (let i = 0; i < orders.length; i++) {
+                                makeCard(orders[i]["name"], orders[i]["count"], orders[i]["address"], orders[i]["phone"]);
+                            }
+                        } else {
+                            alert("주문 정보를 받아오지 못했습니다");
+                        }
+
+                    }
+                })
+
+            }
+
+            function makeCard(name, count, address, phone) {
                 let tempHtml = `<tr>
                                     <td>${name}</td>
                                     <td>${count}</td>
@@ -106,15 +161,7 @@
                 $('#orders-box').append(tempHtml);
             }
 
-            function phoneNumber(p) {
-                if (/^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}/.test(p)) {
-                    return true;
-                }
-                return false;
-            }
-
-            $(document).ready(function () {
-                alert('다 로딩됐다!')
+            function showExchange() {
                 // 여기에 환율 API Ajax 요청을 하면 되겠죠?
                 $.ajax({
                     type: "GET",
@@ -127,7 +174,7 @@
 
                     }
                 });
-            });
+            }
 
         </script>
     </head>
@@ -196,12 +243,12 @@
                     </tr>
                     </thead>
                     <tbody id="orders-box">
-                    <!--                    <tr>-->
-                    <!--                        <td>박르탄</td>-->
-                    <!--                        <td>10000</td>-->
-                    <!--                        <td>르탄시 코딩구 열심동</td>-->
-                    <!--                        <td>010-1234-5678</td>-->
-                    <!--                    </tr>-->
+                    <tr>
+                        <td>박르탄</td>
+                        <td>10000</td>
+                        <td>르탄시 코딩구 열심동</td>
+                        <td>010-1234-5678</td>
+                    </tr>
 
                     </tbody>
                 </table>
